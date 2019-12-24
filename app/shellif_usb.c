@@ -15,6 +15,8 @@
 
 #define TX_BUFFER_SIZE      (512)
 
+static void shellif_usb_tx_usb(uint8_t from_isr);
+
 static IRQn_Type              _irqn  = USB_IRQn;
 static CircBuffer             _rx_cb;
 static volatile uint8_t       _rx_buffer[CLI_RX_BUFFER_LENGTH];
@@ -52,7 +54,8 @@ shellif_usb_leave_critical(CircBuffer* cb)
 static bool
 shellif_usb_tx_complete(const uint8_t ep, const enum usb_xfer_code rc, const uint32_t count)
 {
-  event_set(1 << DISPATCH_EVENT_USB_CLI_TX);
+  // event_set(1 << DISPATCH_EVENT_USB_CLI_TX);
+  shellif_usb_tx_usb(true);
 
   /* No error. */
   return false;
@@ -109,19 +112,19 @@ shellif_usb_get_rx_data(ShellIntf* intf, uint8_t* data)
 }
 
 static void
-shellif_usb_tx_usb(void)
+shellif_usb_tx_usb(uint8_t from_isr)
 {
   int num_bytes;
   static uint8_t  buf[64];
 
-  if(circ_buffer_is_empty(&_tx_cb, false))
+  if(circ_buffer_is_empty(&_tx_cb, from_isr))
   {
     _tx_in_prog = false;
     return;
   }
 
   num_bytes = _tx_cb.num_bytes > 64 ? 64 : _tx_cb.num_bytes;
-  circ_buffer_dequeue(&_tx_cb, buf, num_bytes, false);
+  circ_buffer_dequeue(&_tx_cb, buf, num_bytes, from_isr);
 
   cdcdf_acm_write(buf, num_bytes);
   _tx_in_prog = true;
@@ -130,37 +133,37 @@ shellif_usb_tx_usb(void)
 static void
 shellif_usb_put_tx_data(ShellIntf* intf, uint8_t* data, uint16_t len)
 {
-  if(_tx_in_prog == false)
+  if(_tx_cb.capacity < len)
   {
-    // no tx in progress
-    // FIXME: overflow
-    if(circ_buffer_enqueue(&_tx_cb, data, (uint8_t)len, false) == false)
+    // BUG
+    while(1)
+      ;
+  }
+
+  while(1)
+  {
+    shellif_usb_enter_critical(NULL);
+
+    if(circ_buffer_enqueue(&_tx_cb, data, (uint8_t)len, false) == true)
     {
-      // not enough space
-      return;
+      break;
     }
 
-    // initiate USB TX
-    shellif_usb_tx_usb();
+    shellif_usb_leave_critical(NULL);
   }
-  else
+
+  // still locked
+  if(_tx_in_prog == false)
   {
-    // simply put in TX queue
-    // FIXME: overflow
-    circ_buffer_enqueue(&_tx_cb, data, (uint8_t)len, false);
+    shellif_usb_tx_usb(false);
   }
+  shellif_usb_leave_critical(NULL);
 }
 
 static void
 shellif_usb_rx_event_handler(uint32_t event)
 {
   shell_handle_rx(&_shell_usb_if);
-}
-
-static void
-shellif_usb_tx_event_handler(uint32_t event)
-{
-  shellif_usb_tx_usb();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -186,7 +189,6 @@ shellif_usb_init(void)
   shell_if_register(&_shell_usb_if);
 
   event_register_handler(shellif_usb_rx_event_handler, DISPATCH_EVENT_USB_CLI_RX);
-  event_register_handler(shellif_usb_tx_event_handler, DISPATCH_EVENT_USB_CLI_TX);
 
   cdcdf_acm_register_callback(CDCDF_ACM_CB_STATE_C, (FUNC_PTR)shellif_usb_lc);
 }
