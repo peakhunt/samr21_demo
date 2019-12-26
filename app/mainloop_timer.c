@@ -5,6 +5,8 @@
 #include "event_dispatcher.h"
 #include "event_list.h"
 
+volatile uint32_t     __msec    = 0;
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 // private prototypes
@@ -60,5 +62,6 @@ mainloop_timer_cancel(SoftTimerElem* elem)
 void
 SysTick_Handler(void)
 {
+  __msec++;
   event_set(1 << DISPATCH_EVENT_TIMER_TICK);
 }

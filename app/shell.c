@@ -7,6 +7,7 @@
 #include "app_common.h"
 #include "shell.h"
 #include "shellif_usb.h"
+#include "at86rf233.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -35,6 +36,8 @@ typedef struct
 ////////////////////////////////////////////////////////////////////////////////
 static void shell_command_help(ShellIntf* intf, int argc, const char** argv);
 static void shell_command_version(ShellIntf* intf, int argc, const char** argv);
+static void shell_command_rf_reg_read(ShellIntf* intf, int argc, const char** argv);
+static void shell_command_rf_reset(ShellIntf* intf, int argc, const char** argv);
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -60,6 +63,17 @@ static ShellCommand     _commands[] =
     "show program version",
     shell_command_version,
   },
+  {
+    "rf_reg_read",
+    "read register from rf",
+    shell_command_rf_reg_read,
+  },
+
+  {
+    "rf_reset",
+    "reset RF chip",
+    shell_command_rf_reset,
+  }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -97,6 +111,36 @@ shell_command_version(ShellIntf* intf, int argc, const char** argv)
 {
   shell_printf(intf, "\r\n");
   shell_printf(intf, "%s\r\n", VERSION);
+}
+
+static void
+shell_command_rf_reg_read(ShellIntf* intf, int argc, const char** argv)
+{
+  uint8_t reg;
+  uint8_t r[2];
+
+  if(argc != 2)
+  {
+    shell_printf(intf, "Syntax error %s 0x<reg>\r\n", argv[0]);
+    return;
+  }
+
+  reg = strtol(argv[1], NULL, 16);
+  if(at86rf233_read_reg(reg, r) == false)
+  {
+    shell_printf(intf, "read from 0x%02x failed\r\n", reg);
+  }
+  else
+  {
+    shell_printf(intf, "read from 0x%02x: 0x%02x 0x%02x\r\n", reg, r[0], r[1]);
+  }
+}
+
+static void
+shell_command_rf_reset(ShellIntf* intf, int argc, const char** argv)
+{
+  at86rf233_reset();
+  shell_printf(intf, "reset RF done\r\n");
 }
 
 ////////////////////////////////////////////////////////////////////////////////

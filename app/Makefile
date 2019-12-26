@@ -1,3 +1,28 @@
+ifdef SystemRoot
+	SHELL = cmd.exe
+	MK_DIR = mkdir
+else
+	ifeq ($(shell uname), Linux)
+		MK_DIR = mkdir -p
+	endif
+
+	ifeq ($(shell uname | cut -d _ -f 1), CYGWIN)
+		MK_DIR = mkdir -p
+	endif
+
+	ifeq ($(shell uname | cut -d _ -f 1), MINGW32)
+		MK_DIR = mkdir -p
+	endif
+
+	ifeq ($(shell uname | cut -d _ -f 1), MINGW64)
+		MK_DIR = mkdir -p
+	endif
+
+	ifeq ($(shell uname | cut -d _ -f 1), Darwin)
+		MK_DIR = mkdir -p
+	endif
+endif
+
 SUB_DIRS += \
  \
 app
@@ -10,7 +35,8 @@ app/soft_timer.o \
 app/event_dispatcher.o \
 app/mainloop_timer.o \
 app/blinky.o \
-app/shellif_usb.o
+app/shellif_usb.o \
+app/at86rf233.o
 
 OBJS_AS_ARGS += \
 "app/app.o" \
@@ -20,7 +46,8 @@ OBJS_AS_ARGS += \
 "app/event_dispatcher.o" \
 "app/mainloop_timer.o" \
 "app/blinky.o" \
-"app/shellif_usb.o"
+"app/shellif_usb.o" \
+"app/at86rf233.o"
 
 DIR_INCLUDES += \
 -I"../app"
@@ -33,4 +60,5 @@ DEPS_AS_ARGS += \
 "app/event_dispatcher.d" \
 "app/mainloop_timer.d" \
 "app/blinky.d" \
-"app/shellif_usb.d"
+"app/shellif_usb.d" \
+"app/at86rf233.d"

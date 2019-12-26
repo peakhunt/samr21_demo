@@ -7,6 +7,7 @@
 #include "mainloop_timer.h"
 #include "blinky.h"
 #include "shell.h"
+#include "at86rf233.h"
 #include "app.h"
 
 static void
@@ -25,6 +26,7 @@ static void
 app_init_r(void)
 {
   // runs with IRQ enabled
+  at86rf233_init();
   blinky_init();
   shell_init();
 }

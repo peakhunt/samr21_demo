@@ -36,11 +36,12 @@ armcc/Device/SAMR21/Source \
 armcc/Device/SAMR21/Source/ARM \
 hpl/pm \
 hpl/sysctrl \
-hal/utils/src \
+hpl/eic \
 hpl/sercom \
 examples \
 hpl/gclk \
 usb \
+hal/utils/src \
 hpl/core \
 usb/device
 
@@ -48,6 +49,7 @@ usb/device
 OBJS +=  \
 hal/src/hal_io.o \
 hpl/systick/hpl_systick.o \
+hpl/eic/hpl_eic.o \
 usb/class/cdc/device/cdcdf_acm.o \
 hal/src/hal_spi_m_sync.o \
 hpl/usb/hpl_usb.o \
@@ -59,6 +61,7 @@ hpl/core/hpl_core_m0plus_base.o \
 hal/utils/src/utils_assert.o \
 usb_start.o \
 hpl/sysctrl/hpl_sysctrl.o \
+hpl/sercom/hpl_sercom.o \
 hpl/gclk/hpl_gclk.o \
 usb/usb_protocol.o \
 hal/src/hal_init.o \
@@ -67,7 +70,7 @@ main.o \
 examples/driver_examples.o \
 armcc/Device/SAMR21/Source/system_samr21.o \
 driver_init.o \
-hpl/sercom/hpl_sercom.o \
+hal/src/hal_ext_irq.o \
 hal/src/hal_gpio.o \
 hal/utils/src/utils_event.o \
 hal/src/hal_sleep.o \
@@ -80,6 +83,7 @@ hal/src/hal_atomic.o
 OBJS_AS_ARGS +=  \
 "hal/src/hal_io.o" \
 "hpl/systick/hpl_systick.o" \
+"hpl/eic/hpl_eic.o" \
 "usb/class/cdc/device/cdcdf_acm.o" \
 "hal/src/hal_spi_m_sync.o" \
 "hpl/usb/hpl_usb.o" \
@@ -91,6 +95,7 @@ OBJS_AS_ARGS +=  \
 "hal/utils/src/utils_assert.o" \
 "usb_start.o" \
 "hpl/sysctrl/hpl_sysctrl.o" \
+"hpl/sercom/hpl_sercom.o" \
 "hpl/gclk/hpl_gclk.o" \
 "usb/usb_protocol.o" \
 "hal/src/hal_init.o" \
@@ -99,7 +104,7 @@ OBJS_AS_ARGS +=  \
 "examples/driver_examples.o" \
 "armcc/Device/SAMR21/Source/system_samr21.o" \
 "driver_init.o" \
-"hpl/sercom/hpl_sercom.o" \
+"hal/src/hal_ext_irq.o" \
 "hal/src/hal_gpio.o" \
 "hal/utils/src/utils_event.o" \
 "hal/src/hal_sleep.o" \
@@ -116,6 +121,7 @@ DEPS_AS_ARGS +=  \
 "hal/utils/src/utils_event.d" \
 "hal/src/hal_io.d" \
 "hpl/systick/hpl_systick.d" \
+"hpl/eic/hpl_eic.d" \
 "usb/class/cdc/device/cdcdf_acm.d" \
 "hpl/usb/hpl_usb.d" \
 "hal/src/hal_spi_m_sync.d" \
@@ -139,10 +145,11 @@ DEPS_AS_ARGS +=  \
 "hal/src/hal_sleep.d" \
 "hpl/sercom/hpl_sercom.d" \
 "hal/src/hal_gpio.d" \
+"atmel_start.d" \
 "hal/src/hal_atomic.d" \
 "usb/device/usbdc.d" \
 "hpl/pm/hpl_pm.d" \
-"atmel_start.d"
+"hal/src/hal_ext_irq.d"
 
 OUTPUT_FILE_NAME :=AtmelStart
 QUOTE := "
@@ -178,7 +185,7 @@ $(OBJS_AS_ARGS)
 	@echo Building file: $<
 	@echo ARMCC Compiler
 	$(QUOTE)armcc$(QUOTE) --c99 -c -DDEBUG -O1 -g --apcs=interwork --split_sections --cpu Cortex-M0+ -D__SAMR21G18A__ \
--I"../" -I"../config" -I"../examples" -I"../hal/include" -I"../hal/utils/include" -I"../hpl/core" -I"../hpl/dmac" -I"../hpl/gclk" -I"../hpl/pm" -I"../hpl/port" -I"../hpl/sercom" -I"../hpl/sysctrl" -I"../hpl/systick" -I"../hpl/usb" -I"../hri" -I"../" -I"../config" -I"../usb" -I"../usb/class/cdc" -I"../usb/class/cdc/device" -I"../usb/device" -I"../" -I"../CMSIS/Core/Include" -I"../include"  \
+-I"../" -I"../config" -I"../examples" -I"../hal/include" -I"../hal/utils/include" -I"../hpl/core" -I"../hpl/dmac" -I"../hpl/eic" -I"../hpl/gclk" -I"../hpl/pm" -I"../hpl/port" -I"../hpl/sercom" -I"../hpl/sysctrl" -I"../hpl/systick" -I"../hpl/usb" -I"../hri" -I"../" -I"../config" -I"../usb" -I"../usb/class/cdc" -I"../usb/class/cdc/device" -I"../usb/device" -I"../" -I"../CMSIS/Core/Include" -I"../include"  \
 --depend "$@"  -o "$@" "$<"
 
 	@echo Finished building: $<
@@ -187,7 +194,7 @@ $(OBJS_AS_ARGS)
 	@echo Building file: $<
 	@echo ARMCC Assembler
 	$(QUOTE)armasm$(QUOTE) -g --apcs=interwork --cpu Cortex-M0+ --pd "D__SAMR21G18A__ SETA 1" \
--I"../" -I"../config" -I"../examples" -I"../hal/include" -I"../hal/utils/include" -I"../hpl/core" -I"../hpl/dmac" -I"../hpl/gclk" -I"../hpl/pm" -I"../hpl/port" -I"../hpl/sercom" -I"../hpl/sysctrl" -I"../hpl/systick" -I"../hpl/usb" -I"../hri" -I"../" -I"../config" -I"../usb" -I"../usb/class/cdc" -I"../usb/class/cdc/device" -I"../usb/device" -I"../" -I"../CMSIS/Core/Include" -I"../include"  \
+-I"../" -I"../config" -I"../examples" -I"../hal/include" -I"../hal/utils/include" -I"../hpl/core" -I"../hpl/dmac" -I"../hpl/eic" -I"../hpl/gclk" -I"../hpl/pm" -I"../hpl/port" -I"../hpl/sercom" -I"../hpl/sysctrl" -I"../hpl/systick" -I"../hpl/usb" -I"../hri" -I"../" -I"../config" -I"../usb" -I"../usb/class/cdc" -I"../usb/class/cdc/device" -I"../usb/device" -I"../" -I"../CMSIS/Core/Include" -I"../include"  \
 --depend "$(@:%.o=%.d)" -o "$@" "$<"
 
 	@echo Finished building: $<
@@ -196,7 +203,7 @@ $(OBJS_AS_ARGS)
 	@echo Building file: $<
 	@echo ARMCC Preprocessing Assembler
 	$(QUOTE)armcc$(QUOTE) --c99 -c -DDEBUG -O1 -g --apcs=interwork --split_sections --cpu Cortex-M0+ -D__SAMR21G18A__ \
--I"../" -I"../config" -I"../examples" -I"../hal/include" -I"../hal/utils/include" -I"../hpl/core" -I"../hpl/dmac" -I"../hpl/gclk" -I"../hpl/pm" -I"../hpl/port" -I"../hpl/sercom" -I"../hpl/sysctrl" -I"../hpl/systick" -I"../hpl/usb" -I"../hri" -I"../" -I"../config" -I"../usb" -I"../usb/class/cdc" -I"../usb/class/cdc/device" -I"../usb/device" -I"../" -I"../CMSIS/Core/Include" -I"../include"  \
+-I"../" -I"../config" -I"../examples" -I"../hal/include" -I"../hal/utils/include" -I"../hpl/core" -I"../hpl/dmac" -I"../hpl/eic" -I"../hpl/gclk" -I"../hpl/pm" -I"../hpl/port" -I"../hpl/sercom" -I"../hpl/sysctrl" -I"../hpl/systick" -I"../hpl/usb" -I"../hri" -I"../" -I"../config" -I"../usb" -I"../usb/class/cdc" -I"../usb/class/cdc/device" -I"../usb/device" -I"../" -I"../CMSIS/Core/Include" -I"../include"  \
 --depend "$@"  -o "$@" "$<"
 
 	@echo Finished building: $<

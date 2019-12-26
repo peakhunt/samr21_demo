@@ -24,7 +24,7 @@ else
 		MK_DIR = mkdir -p
 	endif
 
-	ifeq ($(shell uname | cut -d _ -f 1), Darwin)
+	ifeq ($(shell uname | cut -d _ -f 1), DARWIN)
 		MK_DIR = mkdir -p
 	endif
 endif
@@ -40,11 +40,12 @@ hpl/dmac \
 hal/src \
 hpl/pm \
 hpl/sysctrl \
-hal/utils/src \
+hpl/eic \
 hpl/sercom \
 examples \
 hpl/gclk \
 usb \
+hal/utils/src \
 gcc/gcc \
 hpl/core \
 usb/device
@@ -54,6 +55,7 @@ OBJS +=  \
 hal/src/hal_io.o \
 hpl/systick/hpl_systick.o \
 gcc/gcc/startup_samr21.o \
+hpl/eic/hpl_eic.o \
 usb/class/cdc/device/cdcdf_acm.o \
 hal/utils/src/utils_syscalls.o \
 hal/src/hal_spi_m_sync.o \
@@ -66,6 +68,7 @@ hpl/core/hpl_core_m0plus_base.o \
 hal/utils/src/utils_assert.o \
 usb_start.o \
 hpl/sysctrl/hpl_sysctrl.o \
+hpl/sercom/hpl_sercom.o \
 hpl/gclk/hpl_gclk.o \
 gcc/system_samr21.o \
 usb/usb_protocol.o \
@@ -74,7 +77,7 @@ hal/src/hal_usb_device.o \
 main.o \
 examples/driver_examples.o \
 driver_init.o \
-hpl/sercom/hpl_sercom.o \
+hal/src/hal_ext_irq.o \
 hal/src/hal_gpio.o \
 hal/utils/src/utils_event.o \
 hal/src/hal_sleep.o \
@@ -87,6 +90,7 @@ OBJS_AS_ARGS +=  \
 "hal/src/hal_io.o" \
 "hpl/systick/hpl_systick.o" \
 "gcc/gcc/startup_samr21.o" \
+"hpl/eic/hpl_eic.o" \
 "usb/class/cdc/device/cdcdf_acm.o" \
 "hal/utils/src/utils_syscalls.o" \
 "hal/src/hal_spi_m_sync.o" \
@@ -99,6 +103,7 @@ OBJS_AS_ARGS +=  \
 "hal/utils/src/utils_assert.o" \
 "usb_start.o" \
 "hpl/sysctrl/hpl_sysctrl.o" \
+"hpl/sercom/hpl_sercom.o" \
 "hpl/gclk/hpl_gclk.o" \
 "gcc/system_samr21.o" \
 "usb/usb_protocol.o" \
@@ -107,7 +112,7 @@ OBJS_AS_ARGS +=  \
 "main.o" \
 "examples/driver_examples.o" \
 "driver_init.o" \
-"hpl/sercom/hpl_sercom.o" \
+"hal/src/hal_ext_irq.o" \
 "hal/src/hal_gpio.o" \
 "hal/utils/src/utils_event.o" \
 "hal/src/hal_sleep.o" \
@@ -125,6 +130,7 @@ DIR_INCLUDES +=  \
 -I"../hal/utils/include" \
 -I"../hpl/core" \
 -I"../hpl/dmac" \
+-I"../hpl/eic" \
 -I"../hpl/gclk" \
 -I"../hpl/pm" \
 -I"../hpl/port" \
@@ -151,6 +157,7 @@ DEPS_AS_ARGS +=  \
 "hal/utils/src/utils_event.d" \
 "hal/src/hal_io.d" \
 "hpl/systick/hpl_systick.d" \
+"hpl/eic/hpl_eic.d" \
 "hal/utils/src/utils_syscalls.d" \
 "usb/class/cdc/device/cdcdf_acm.d" \
 "hpl/usb/hpl_usb.d" \
@@ -174,10 +181,11 @@ DEPS_AS_ARGS +=  \
 "hal/src/hal_sleep.d" \
 "hpl/sercom/hpl_sercom.d" \
 "hal/src/hal_gpio.d" \
+"atmel_start.d" \
 "hal/src/hal_atomic.d" \
 "usb/device/usbdc.d" \
 "hpl/pm/hpl_pm.d" \
-"atmel_start.d"
+"hal/src/hal_ext_irq.d"
 
 OUTPUT_FILE_NAME :=AtmelStart
 QUOTE := "
@@ -222,7 +230,7 @@ $(OUTPUT_FILE_PATH): $(OBJS)
 %.o: %.c
 	@echo Building file: $<
 	@echo ARM/GNU C Compiler
-	$(QUOTE)arm-none-eabi-gcc$(QUOTE) -x c -mthumb -DDEBUG -Og -ffunction-sections -mlong-calls -g3 -Wall -Werror -c -std=gnu99 \
+	$(QUOTE)arm-none-eabi-gcc$(QUOTE) -x c -mthumb -DDEBUG -Os -ffunction-sections -mlong-calls -g3 -Wall -c -std=gnu99 \
 -D__SAMR21G18A__ -mcpu=cortex-m0plus  \
 $(DIR_INCLUDES) \
 -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"  -o "$@" "$<"
@@ -231,7 +239,7 @@ $(DIR_INCLUDES) \
 %.o: %.s
 	@echo Building file: $<
 	@echo ARM/GNU Assembler
-	$(QUOTE)arm-none-eabi-as$(QUOTE) -x c -mthumb -DDEBUG -Og -ffunction-sections -mlong-calls -g3 -Wall -c -std=gnu99 \
+	$(QUOTE)arm-none-eabi-as$(QUOTE) -x c -mthumb -DDEBUG -Os -ffunction-sections -mlong-calls -g3 -Wall -c -std=gnu99 \
 -D__SAMR21G18A__ -mcpu=cortex-m0plus  \
 $(DIR_INCLUDES) \
 -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"  -o "$@" "$<"
@@ -240,7 +248,7 @@ $(DIR_INCLUDES) \
 %.o: %.S
 	@echo Building file: $<
 	@echo ARM/GNU Preprocessing Assembler
-	$(QUOTE)arm-none-eabi-gcc$(QUOTE) -x c -mthumb -DDEBUG -Og -ffunction-sections -mlong-calls -g3 -Wall -c -std=gnu99 \
+	$(QUOTE)arm-none-eabi-gcc$(QUOTE) -x c -mthumb -DDEBUG -Os -ffunction-sections -mlong-calls -g3 -Wall -c -std=gnu99 \
 -D__SAMR21G18A__ -mcpu=cortex-m0plus  \
 $(DIR_INCLUDES) \
 -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"  -o "$@" "$<"

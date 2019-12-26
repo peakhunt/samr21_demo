@@ -11,6 +11,13 @@
 #include "utils.h"
 
 /**
+ * Example of using EXTERNAL_IRQ_0
+ */
+void EXTERNAL_IRQ_0_example(void)
+{
+}
+
+/**
  * Example of using RF_SPI to write "Hello World" using the IO abstraction.
  */
 static uint8_t example_RF_SPI[12] = "Hello World!";
