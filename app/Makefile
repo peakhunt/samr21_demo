@@ -50,7 +50,7 @@ OBJS_AS_ARGS += \
 "app/at86rf233.o"
 
 DIR_INCLUDES += \
--I"../app"
+-I"../../app"
 
 DEPS_AS_ARGS += \
 "app/app.d" \
@@ -62,3 +62,5 @@ DEPS_AS_ARGS += \
 "app/blinky.d" \
 "app/shellif_usb.d" \
 "app/at86rf233.d"
+
+vpath %.c ../../
