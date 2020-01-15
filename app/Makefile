@@ -50,7 +50,8 @@ OBJS_AS_ARGS += \
 "app/at86rf233.o"
 
 DIR_INCLUDES += \
--I"../../app"
+-I"../../app" \
+-I"../../"
 
 DEPS_AS_ARGS += \
 "app/app.d" \

@@ -10,6 +10,8 @@
 #include "at86rf233.h"
 #include "app.h"
 
+#include "802.15.4/802.15.4_mac.h"
+
 static void
 app_init_f(void)
 {
