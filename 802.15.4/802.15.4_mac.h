@@ -104,6 +104,40 @@ typedef struct
   uint8_t                           keyIndex;
 } __802_15_4_mac_mlme_assoc_request_t;
 
+typedef struct
+{
+  uint8_t                           deviceAddr[8];
+  uint8_t                           capInfo;
+  uint8_t                           secLevel;
+  uint8_t                           keyIdMode;
+  uint8_t                           keySource[8];
+  uint8_t                           keyIndex;
+} __802_15_4_mac_mlme_assoc_indication_t;
+
+typedef struct
+{
+  uint8_t                           deviceAddr[8];
+  uint8_t                           assocShortAddress[2];
+  _802_15_4_Status_t                status;
+  uint8_t                           secLevel;
+  uint8_t                           keyIdMode;
+  uint8_t                           keySource[8];
+  uint8_t                           keyIndex;
+} __802_15_4_mac_mlme_assoc_response_t;
+
+typedef struct
+{
+  uint8_t                           assocShortAddress[2];
+  _802_15_4_Status_t                status;
+  uint8_t                           secLevel;
+  uint8_t                           keyIdMode;
+  uint8_t                           keySource[8];
+  uint8_t                           keyIndex;
+} __802_15_4_mac_mlme_assoc_confirm_t;
+
+//
+// Data Service Callbacks
+//
 typedef void (*__802_15_4_mac_data_indication)(__802_15_4_mac_t* mac,
     __802_15_4_mac_data_indication_t* ind);
 typedef void (*__802_15_4_mac_data_confirm)(__802_15_4_mac_t* mac,
@@ -112,11 +146,22 @@ typedef void (*__802_15_4_mac_data_confirm)(__802_15_4_mac_t* mac,
     _802_15_4_timestamp_t timestamp);
 typedef void (*__802_15_4_mac_purge_confirm)(__802_15_4_mac_t* mac, uint8_t msduHandle, _802_15_4_Status_t status);
 
+//
+// MLME Callbacks
+//
+typedef void (*__802_15_4_mac_mlme_assoc_indication)(__802_15_4_mac_t* mac,
+    __802_15_4_mac_mlme_assoc_indication_t* ind);
+typedef void (*__802_15_4_mac_mlme_assoc_confirm)(__802_15_4_mac_t* mac,
+    __802_15_4_mac_mlme_assoc_confirm_t* cfm);
+
 struct ____802_15_4_mac
 {
-  __802_15_4_mac_data_indication  data_indication;
-  __802_15_4_mac_data_confirm     data_confirm;
-  __802_15_4_mac_purge_confirm    purge_confirm;
+  __802_15_4_mac_data_indication        data_indication;
+  __802_15_4_mac_data_confirm           data_confirm;
+  __802_15_4_mac_purge_confirm          purge_confirm;
+
+  __802_15_4_mac_mlme_assoc_indication  assoc_indication;
+  __802_15_4_mac_mlme_assoc_confirm     assoc_confirm;
 
   uint8_t                         srcAddrShort[2];
   uint8_t                         srcAddrLong[8];
@@ -124,6 +169,9 @@ struct ____802_15_4_mac
 
 extern void __802_15_4_mac_data_request(__802_15_4_mac_t* mac, __802_15_4_mac_data_request_t* req);
 extern void __802_15_4_mac_purge_request(__802_15_4_mac_t* mac, uint8_t msduHandle);
+
+extern void __802_15_4_mac_assoc_request(__802_15_4_mac_t* mac, __802_15_4_mac_mlme_assoc_request_t* req);
+extern void __802_15_4_mac_assoc_response(__802_15_4_mac_t* mac, __802_15_4_mac_mlme_assoc_response_t* rsp);
 
 
 #endif /* !__802_15_4_MAC_DEF_H__ */
