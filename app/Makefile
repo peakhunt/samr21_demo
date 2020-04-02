@@ -36,7 +36,7 @@ app/event_dispatcher.o \
 app/mainloop_timer.o \
 app/blinky.o \
 app/shellif_usb.o \
-app/at86rf233.o
+app/phy.o
 
 OBJS_AS_ARGS += \
 "app/app.o" \
@@ -47,7 +47,7 @@ OBJS_AS_ARGS += \
 "app/mainloop_timer.o" \
 "app/blinky.o" \
 "app/shellif_usb.o" \
-"app/at86rf233.o"
+"app/phy.o"
 
 DIR_INCLUDES += \
 -I"../../app" \
@@ -62,6 +62,6 @@ DEPS_AS_ARGS += \
 "app/mainloop_timer.d" \
 "app/blinky.d" \
 "app/shellif_usb.d" \
-"app/at86rf233.d"
+"app/phy.d"
 
 vpath %.c ../../

@@ -7,10 +7,8 @@
 #include "mainloop_timer.h"
 #include "blinky.h"
 #include "shell.h"
-#include "at86rf233.h"
+#include "phy.h"
 #include "app.h"
-
-#include "802.15.4/802.15.4_mac.h"
 
 static void
 app_init_f(void)
@@ -28,7 +26,7 @@ static void
 app_init_r(void)
 {
   // runs with IRQ enabled
-  at86rf233_init();
+  PHY_Init();
   blinky_init();
   shell_init();
 }

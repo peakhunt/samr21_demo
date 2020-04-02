@@ -126,7 +126,9 @@ shell_command_rf_reg_read(ShellIntf* intf, int argc, const char** argv)
   }
 
   reg = strtol(argv[1], NULL, 16);
-  if(at86rf233_read_reg(reg, r) == false)
+
+  //FIXME if(at86rf233_read_reg(reg, r) == false)
+  if(1)
   {
     shell_printf(intf, "read from 0x%02x failed\r\n", reg);
   }
@@ -139,7 +141,7 @@ shell_command_rf_reg_read(ShellIntf* intf, int argc, const char** argv)
 static void
 shell_command_rf_reset(ShellIntf* intf, int argc, const char** argv)
 {
-  at86rf233_reset();
+  // FIXME at86rf233_reset();
   shell_printf(intf, "reset RF done\r\n");
 }
 
