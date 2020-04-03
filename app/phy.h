@@ -46,6 +46,7 @@ void PHY_DataInd(PHY_DataInd_t *ind);
 void PHY_TaskHandler(void);
 void PHY_SetIEEEAddr(uint8_t *ieee_addr);
 uint16_t PHY_RandomReq(void);
+uint8_t phyReadRegister(uint8_t reg);
 
 void PHY_EncryptReq(uint8_t *text, uint8_t *key);
 

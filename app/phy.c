@@ -8,6 +8,8 @@
 #include "app_common.h"
 #include "phy.h"
 #include "at86rf233.h"
+#include "event_list.h"
+#include "event_dispatcher.h"
 
 #define PHY_CRC_SIZE    2
 
@@ -34,7 +36,6 @@ typedef enum
 } PhyState_t;
 
 static void phyWriteRegister(uint8_t reg, uint8_t value);
-static uint8_t phyReadRegister(uint8_t reg);
 static void phyWaitState(uint8_t state);
 static void phyTrxSetState(uint8_t state);
 static void phySetRxState(void);
@@ -52,6 +53,24 @@ static bool phyRxState;
 #define TRX_SLP_TR_LOW()      SLP_TR_LOW()
 #define TRX_SLP_TR_HIGH()     SLP_TR_HIGH()
 #define TRX_TRIG_DELAY()  { __NOP(); __NOP(); }
+
+//
+// FIXME IRQ disable/enable???
+//
+#define PHY_DISABLE_IRQ()
+#define PHY_ENABLE_IRQ()
+
+static void
+__at86rf233_irq_handler(void)
+{
+  event_set(1 << DISPATCH_EVENT_RF_IRQ);
+}
+
+static void
+at86rf233_irq_handler(uint32_t event)
+{
+  PHY_TaskHandler();
+}
 
 static void
 at86rf233_cs(uint8_t sel)
@@ -71,7 +90,8 @@ at86rf233_cs(uint8_t sel)
 static void
 trx_spi_init(void)
 {
-  // nothing to do for now
+  at86rf233_cs(false);    // chip select high
+  spi_m_sync_enable(&RF_SPI);
 }
 
 static void
@@ -90,7 +110,7 @@ PhyReset(void)
 static void
 trx_reg_write(uint8_t addr, uint8_t data)
 {
-  // FIXME IRQ disable
+  PHY_DISABLE_IRQ();
 
   //
   // MOSI     | cmd(1)        | data(1) |
@@ -106,12 +126,14 @@ trx_reg_write(uint8_t addr, uint8_t data)
   spi_m_sync_transfer(&RF_SPI, &_xfer);
 
   at86rf233_cs(false);
+
+  PHY_ENABLE_IRQ();
 }
 
 static uint8_t
 trx_reg_read(uint8_t addr)
 {
-  // FIXME IRQ disable
+  PHY_DISABLE_IRQ();
 
   //
   // MOSI     | cmd(1)        | XX(1)   |
@@ -130,13 +152,16 @@ trx_reg_read(uint8_t addr)
 
   // data[0] = _xfer.rxbuf[0];
   // data[1] = _xfer.rxbuf[1];
+
+  PHY_ENABLE_IRQ();
+
   return _xfer.rxbuf[1];
 }
 
 static void
 trx_frame_read(uint8_t* buf, uint8_t size)
 {
-  // FIXME IRQ disable
+  PHY_DISABLE_IRQ();
 
   struct spi_xfer xfer = 
   {
@@ -156,12 +181,14 @@ trx_frame_read(uint8_t* buf, uint8_t size)
   spi_m_sync_transfer(&RF_SPI, &xfer);
 
   at86rf233_cs(false);
+
+  PHY_ENABLE_IRQ();
 }
 
 static void
 trx_frame_write(uint8_t* buf, uint8_t size)
 {
-  // FIXME IRQ disable
+  PHY_DISABLE_IRQ();
 
   struct spi_xfer xfer = 
   {
@@ -181,6 +208,8 @@ trx_frame_write(uint8_t* buf, uint8_t size)
   spi_m_sync_transfer(&RF_SPI, &xfer);
 
   at86rf233_cs(false);
+
+  PHY_ENABLE_IRQ();
 }
 
 void PHY_Init(void)
@@ -201,6 +230,9 @@ void PHY_Init(void)
 
 	phyWriteRegister(TRX_CTRL_2_REG,
 			(1 << RX_SAFE_MODE) | (1 << OQPSK_SCRAM_EN));
+
+  ext_irq_register(PA22, __at86rf233_irq_handler);
+  event_register_handler(at86rf233_irq_handler, DISPATCH_EVENT_RF_IRQ);
 }
 
 void PHY_SetRxState(bool rx)
@@ -338,7 +370,7 @@ static void phyWriteRegister(uint8_t reg, uint8_t value)
 	trx_reg_write(reg, value);
 }
 
-static uint8_t phyReadRegister(uint8_t reg)
+uint8_t phyReadRegister(uint8_t reg)
 {
 	uint8_t value;
 

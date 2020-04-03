@@ -2,12 +2,17 @@ format_version: '2'
 name: My Project
 versions:
   api: '1.0'
-  backend: 1.6.148
-  commit: 605f106ab95776472e3febf2fac2471441fb1816
-  content: 1.0.1686
-  content_pack_name: acme-packs-all
+  backend: 1.7.301
+  commit: 1e07622763d149970fd8808a8f12ff3b1e84e0d7
+  content: unknown
+  content_pack_name: unknown
   format: '2'
-  frontend: 1.6.1894
+  frontend: 1.7.301
+  packs_version_avr8: 1.0.1408
+  packs_version_qtouch: unknown
+  packs_version_sam: 1.0.1373
+  version_backend: 1.7.301
+  version_frontend: ''
 board:
   identifier: SAMR21XplainedPro
   device: SAMR21G18A-MU
@@ -101,7 +106,7 @@ drivers:
       eic_arch_enable_irq_setting3: false
       eic_arch_enable_irq_setting4: false
       eic_arch_enable_irq_setting5: false
-      eic_arch_enable_irq_setting6: false
+      eic_arch_enable_irq_setting6: true
       eic_arch_enable_irq_setting7: false
       eic_arch_enable_irq_setting8: false
       eic_arch_enable_irq_setting9: false
@@ -151,7 +156,7 @@ drivers:
       eic_arch_sense3: No detection
       eic_arch_sense4: No detection
       eic_arch_sense5: No detection
-      eic_arch_sense6: No detection
+      eic_arch_sense6: Rising-edge detection
       eic_arch_sense7: No detection
       eic_arch_sense8: No detection
       eic_arch_sense9: No detection
@@ -171,7 +176,14 @@ drivers:
       eic_arch_wakeupen7: false
       eic_arch_wakeupen8: false
       eic_arch_wakeupen9: false
-    optional_signals: []
+    optional_signals:
+    - identifier: EXTERNAL_IRQ_0:EXTINT/6
+      pad: PA22
+      mode: Enabled
+      configuration: null
+      definition: Atmel:SAMR21_Drivers:0.0.1::SAMR21G18A-MU::optional_signal_definition::EIC.EXTINT.6
+      name: EIC/EXTINT/6
+      label: EXTINT/6
     variant: null
     clocks:
       domain_group:
@@ -189,13 +201,21 @@ drivers:
     api: HAL:HPL:GCLK
     configuration:
       enable_gclk_gen_0: true
+      enable_gclk_gen_0__externalclock: 1000000
       enable_gclk_gen_1: false
+      enable_gclk_gen_1__externalclock: 1000000
       enable_gclk_gen_2: false
+      enable_gclk_gen_2__externalclock: 1000000
       enable_gclk_gen_3: true
+      enable_gclk_gen_3__externalclock: 1000000
       enable_gclk_gen_4: false
+      enable_gclk_gen_4__externalclock: 1000000
       enable_gclk_gen_5: false
+      enable_gclk_gen_5__externalclock: 1000000
       enable_gclk_gen_6: true
+      enable_gclk_gen_6__externalclock: 1000000
       enable_gclk_gen_7: false
+      enable_gclk_gen_7__externalclock: 1000000
       gclk_arch_gen_0_RUNSTDBY: false
       gclk_arch_gen_0_enable: true
       gclk_arch_gen_0_idc: false
@@ -767,6 +787,12 @@ pads:
     definition: Atmel:SAMR21_Drivers:0.0.1::SAMR21G18A-MU::pad::PA19
     mode: Digital output
     user_label: LED0
+    configuration: null
+  PA22:
+    name: PA22
+    definition: Atmel:SAMR21_Drivers:0.0.1::SAMR21G18A-MU::pad::PA22
+    mode: Digital input
+    user_label: PA22
     configuration: null
   PA24:
     name: PA24

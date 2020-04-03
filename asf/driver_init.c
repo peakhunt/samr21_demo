@@ -19,32 +19,44 @@ void EXTERNAL_IRQ_0_init(void)
 {
 	_gclk_enable_channel(EIC_GCLK_ID, CONF_GCLK_EIC_SRC);
 
+	// Set pin direction to input
+	gpio_set_pin_direction(PA22, GPIO_DIRECTION_IN);
+
+	gpio_set_pin_pull_mode(PA22,
+	                       // <y> Pull configuration
+	                       // <id> pad_pull_config
+	                       // <GPIO_PULL_OFF"> Off
+	                       // <GPIO_PULL_UP"> Pull-up
+	                       // <GPIO_PULL_DOWN"> Pull-down
+	                       GPIO_PULL_OFF);
+
+	gpio_set_pin_function(PA22, PINMUX_PA22A_EIC_EXTINT6);
+
 	ext_irq_init();
 }
 
 void RF_SPI_PORT_init(void)
 {
-
   // MOSI
-	gpio_set_pin_level(PB30, true);
-	gpio_set_pin_direction(PB30, GPIO_DIRECTION_OUT);
-	gpio_set_pin_function(PB30, PINMUX_PB30F_SERCOM4_PAD2);
+  gpio_set_pin_level(PB30, true);
+  gpio_set_pin_direction(PB30, GPIO_DIRECTION_OUT);
+  gpio_set_pin_function(PB30, PINMUX_PB30F_SERCOM4_PAD2);
 
   // SCLK
-	gpio_set_pin_level(PC18, true);
-	gpio_set_pin_direction(PC18, GPIO_DIRECTION_OUT);
-	gpio_set_pin_function(PC18, PINMUX_PC18F_SERCOM4_PAD3);
+  gpio_set_pin_level(PC18, true);
+  gpio_set_pin_direction(PC18, GPIO_DIRECTION_OUT);
+  gpio_set_pin_function(PC18, PINMUX_PC18F_SERCOM4_PAD3);
 
   // MISO
-	gpio_set_pin_direction(PC19, GPIO_DIRECTION_IN);
-	gpio_set_pin_pull_mode(PC19, GPIO_PULL_OFF);
-	gpio_set_pin_function(PC19, PINMUX_PC19F_SERCOM4_PAD0);
+  gpio_set_pin_direction(PC19, GPIO_DIRECTION_IN);
+  gpio_set_pin_pull_mode(PC19, GPIO_PULL_OFF);
+  gpio_set_pin_function(PC19, PINMUX_PC19F_SERCOM4_PAD0);
 
   // SS
-	gpio_set_pin_level(RF_SEL, true);
-	gpio_set_pin_direction(RF_SEL, GPIO_DIRECTION_OUT);
-	// gpio_set_pin_function(RF_SEL, PINMUX_PB31F_SERCOM4_PAD1);
-	gpio_set_pin_function(RF_SEL, GPIO_PIN_FUNCTION_OFF);
+  gpio_set_pin_level(RF_SEL, true);
+  gpio_set_pin_direction(RF_SEL, GPIO_DIRECTION_OUT);
+  // gpio_set_pin_function(RF_SEL, PINMUX_PB31F_SERCOM4_PAD1);
+  gpio_set_pin_function(RF_SEL, GPIO_PIN_FUNCTION_OFF);
 }
 
 void RF_SPI_CLOCK_init(void)
@@ -268,7 +280,6 @@ void system_init(void)
 	                      // <GPIO_PIN_FUNCTION_H"> H
 	                      GPIO_PIN_FUNCTION_OFF);
 
-#if 0
 	// GPIO on PB31
 
 	gpio_set_pin_direction(RF_SEL,
@@ -308,9 +319,7 @@ void system_init(void)
 	                      // <GPIO_PIN_FUNCTION_F"> F
 	                      // <GPIO_PIN_FUNCTION_G"> G
 	                      // <GPIO_PIN_FUNCTION_H"> H
-                        //PINMUX_PB31F_SERCOM4_PAD1);
 	                      GPIO_PIN_FUNCTION_OFF);
-#endif
 
 	EXTERNAL_IRQ_0_init();
 

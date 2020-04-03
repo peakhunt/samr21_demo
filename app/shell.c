@@ -3,11 +3,12 @@
 #include <stdarg.h>
 #include <string.h>
 #include <stdlib.h>
+#include <ctype.h>
 
 #include "app_common.h"
 #include "shell.h"
 #include "shellif_usb.h"
-#include "at86rf233.h"
+#include "phy.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -37,7 +38,11 @@ typedef struct
 static void shell_command_help(ShellIntf* intf, int argc, const char** argv);
 static void shell_command_version(ShellIntf* intf, int argc, const char** argv);
 static void shell_command_rf_reg_read(ShellIntf* intf, int argc, const char** argv);
-static void shell_command_rf_reset(ShellIntf* intf, int argc, const char** argv);
+static void shell_command_rf_set_rx_state(ShellIntf* intf, int argc, const char** argv);
+static void shell_command_rf_set_channel(ShellIntf* intf, int argc, const char** argv);
+static void shell_command_rf_set_panid(ShellIntf* intf, int argc, const char** argv);
+static void shell_command_rf_set_shortaddr(ShellIntf* intf, int argc, const char** argv);
+static void shell_command_rf_set_ieeeaddr(ShellIntf* intf, int argc, const char** argv);
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -68,12 +73,31 @@ static ShellCommand     _commands[] =
     "read register from rf",
     shell_command_rf_reg_read,
   },
-
   {
-    "rf_reset",
-    "reset RF chip",
-    shell_command_rf_reset,
-  }
+    "rf_set_rx_state",
+    "set rx state to true or false",
+    shell_command_rf_set_rx_state,
+  },
+  {
+    "rx_set_channel",
+    "set rf channel",
+    shell_command_rf_set_channel,
+  },
+  {
+    "rx_set_panid",
+    "set RF PAN ID",
+    shell_command_rf_set_panid,
+  },
+  {
+    "rx_set_shortaddr",
+    "set RF short address",
+    shell_command_rf_set_shortaddr,
+  },
+  {
+    "rx_set_ieeeaddr",
+    "set RF IEEE address",
+    shell_command_rf_set_ieeeaddr,
+  },
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -117,7 +141,7 @@ static void
 shell_command_rf_reg_read(ShellIntf* intf, int argc, const char** argv)
 {
   uint8_t reg;
-  uint8_t r[2];
+  uint8_t r;
 
   if(argc != 2)
   {
@@ -127,22 +151,127 @@ shell_command_rf_reg_read(ShellIntf* intf, int argc, const char** argv)
 
   reg = strtol(argv[1], NULL, 16);
 
-  //FIXME if(at86rf233_read_reg(reg, r) == false)
-  if(1)
-  {
-    shell_printf(intf, "read from 0x%02x failed\r\n", reg);
-  }
-  else
-  {
-    shell_printf(intf, "read from 0x%02x: 0x%02x 0x%02x\r\n", reg, r[0], r[1]);
-  }
+  r = phyReadRegister(reg);
+  shell_printf(intf, "read from 0x%02x: 0x%02x\r\n", reg, r);
 }
 
 static void
-shell_command_rf_reset(ShellIntf* intf, int argc, const char** argv)
+shell_command_rf_set_rx_state(ShellIntf* intf, int argc, const char** argv)
 {
-  // FIXME at86rf233_reset();
-  shell_printf(intf, "reset RF done\r\n");
+  bool v = false;
+
+  if(argc != 2)
+  {
+    shell_printf(intf, "Syntax error %s [true|false]\r\n", argv[0]);
+    return;
+  }
+
+  if(strcmp(argv[1], "true") == 0)
+  {
+    v = true;
+  }
+
+  PHY_SetRxState(v);
+  shell_printf(intf, "setting RX state to %s\r\n", v ? "true" : "false");
+}
+
+static void
+shell_command_rf_set_channel(ShellIntf* intf, int argc, const char** argv)
+{
+  uint8_t chnl;
+
+  if(argc != 2)
+  {
+    shell_printf(intf, "Syntax error %s <channel-number>\r\n", argv[0]);
+    return;
+  }
+
+  chnl = strtol(argv[1], NULL, 10);
+
+  shell_printf(intf, "setting channel to %d\r\n", chnl);
+  PHY_SetChannel(chnl);
+}
+
+static void
+shell_command_rf_set_panid(ShellIntf* intf, int argc, const char** argv)
+{
+  uint16_t pan_id;
+
+  if(argc != 2)
+  {
+    shell_printf(intf, "Syntax error %s 0x<pan-id>\r\n", argv[0]);
+    return;
+  }
+
+  pan_id = strtol(argv[1], NULL, 16);
+
+  shell_printf(intf, "setting PAN ID to 0x%x\r\n", pan_id);
+  PHY_SetPanId(pan_id);
+}
+
+static void
+shell_command_rf_set_shortaddr(ShellIntf* intf, int argc, const char** argv)
+{
+  uint16_t addr;
+
+  if(argc != 2)
+  {
+    shell_printf(intf, "Syntax error %s 0x<short addr>\r\n", argv[0]);
+    return;
+  }
+
+  addr = strtol(argv[1], NULL, 16);
+
+  shell_printf(intf, "setting short address to 0x%x\r\n", addr);
+  PHY_SetShortAddr(addr);
+}
+
+static uint8_t
+check_ieee_addr(char* str, uint8_t addr[8])
+{
+  //
+  // format is
+  // XX:XX:XX:XX:XX:XX:XX:XX
+  //
+  char *s, *t;
+  int i = 0;
+
+  for(i = 0; i < 8; i++)
+  {
+    s = strtok_r(i == 0 ? str : NULL, ":", &t);
+    if(s == NULL ||
+      strlen(s) != 2 ||
+      isxdigit((uint8_t)s[0]) == 0 ||
+      isxdigit((uint8_t)s[1]) == 0)
+    {
+      return 1;
+    }
+
+    addr[i] = strtol(s, NULL, 16);
+  }
+  return 0;
+}
+
+static void
+shell_command_rf_set_ieeeaddr(ShellIntf* intf, int argc, const char** argv)
+{
+  uint8_t addr[8];
+
+  if(argc != 2)
+  {
+    shell_printf(intf, "Syntax error %s 0x<ieee addr>\r\n", argv[0]);
+    return;
+  }
+
+  if(check_ieee_addr((char*)argv[1], addr) != 0)
+  {
+    shell_printf(intf, "invalid IEEE address %s\r\n", argv[1]);
+    return;
+  }
+
+  shell_printf(intf, "setting IEEE address to %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x\r\n",
+      addr[0], addr[1], addr[2], addr[3], addr[4], addr[5], addr[6], addr[7]);
+  PHY_SetIEEEAddr(addr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

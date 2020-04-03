@@ -10,7 +10,6 @@
 
 #include "event_list.h"
 #include "circ_buffer.h"
-#include "event_list.h"
 #include "event_dispatcher.h"
 
 #define TX_BUFFER_SIZE      (512)

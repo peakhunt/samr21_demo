@@ -15,9 +15,6 @@ app_init_f(void)
 {
   // runs with IRQ disabled
 
-  // atmel ASF4 is quite inconveineit in this aspect.
-  SysTick_Config(CONF_CPU_FREQUENCY/1000);
-
   event_dispatcher_init();
   mainloop_timer_init();
 }
@@ -39,6 +36,11 @@ app_begin(void)
   __enable_irq();
 
   app_init_r();
+
+  // atmel ASF4 is quite inconveineit in this aspect.
+  // also atmel delay_xx functions screw up 
+  // this setup
+  SysTick_Config(CONF_CPU_FREQUENCY/1000);
 
   while(1)
   {

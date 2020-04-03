@@ -1,8 +1,7 @@
 ################################################################################
 # Automatically-generated file. Do not edit!
 ################################################################################
-
-include ../../app/Makefile
+-include ../../app/Makefile
 
 ifdef SystemRoot
 	SHELL = cmd.exe

@@ -3,6 +3,8 @@
 
 #define DISPATCH_EVENT_TIMER_TICK           0
 
+#define DISPATCH_EVENT_RF_IRQ               1
+
 #define DISPATCH_EVENT_USB_CLI_RX           8
 #define DISPATCH_EVENT_USB_CLI_TX           9
 
