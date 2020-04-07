@@ -43,6 +43,8 @@ static void shell_command_rf_set_channel(ShellIntf* intf, int argc, const char**
 static void shell_command_rf_set_panid(ShellIntf* intf, int argc, const char** argv);
 static void shell_command_rf_set_shortaddr(ShellIntf* intf, int argc, const char** argv);
 static void shell_command_rf_set_ieeeaddr(ShellIntf* intf, int argc, const char** argv);
+static void shell_command_rf_send_long_frame(ShellIntf* intf, int argc, const char** argv);
+static void shell_command_rf_send_short_frame(ShellIntf* intf, int argc, const char** argv);
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -53,6 +55,8 @@ const uint8_t                 _welcome[] = "\r\n**** Welcome ****\r\n";
 const uint8_t                 _prompt[]  = "\r\nSAMR21> ";
 
 static char                   _print_buffer[SHELL_MAX_COLUMNS_PER_LINE + 1];
+
+static ShellIntf*             _intf_cb = NULL;
 
 static LIST_HEAD(_shell_intf_list);
 
@@ -79,24 +83,34 @@ static ShellCommand     _commands[] =
     shell_command_rf_set_rx_state,
   },
   {
-    "rx_set_channel",
+    "rf_set_channel",
     "set rf channel",
     shell_command_rf_set_channel,
   },
   {
-    "rx_set_panid",
+    "rf_set_panid",
     "set RF PAN ID",
     shell_command_rf_set_panid,
   },
   {
-    "rx_set_shortaddr",
+    "rf_set_shortaddr",
     "set RF short address",
     shell_command_rf_set_shortaddr,
   },
   {
-    "rx_set_ieeeaddr",
+    "rf_set_ieeeaddr",
     "set RF IEEE address",
     shell_command_rf_set_ieeeaddr,
+  },
+  {
+    "rf_send_long_frame",
+    "send long frame",
+    shell_command_rf_send_long_frame,
+  },
+  {
+    "rf_send_short_frame",
+    "send short frame",
+    shell_command_rf_send_short_frame,
   },
 };
 
@@ -272,6 +286,172 @@ shell_command_rf_set_ieeeaddr(ShellIntf* intf, int argc, const char** argv)
   shell_printf(intf, "setting IEEE address to %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x\r\n",
       addr[0], addr[1], addr[2], addr[3], addr[4], addr[5], addr[6], addr[7]);
   PHY_SetIEEEAddr(addr);
+}
+
+static void
+shell_command_rf_send_long_frame(ShellIntf* intf, int argc, const char** argv)
+{
+  static uint8_t data[64];
+  uint8_t ack = false;
+
+  //
+  // data[0]      : frame length
+  // data[1 ... ] : actual data
+  //
+  if(argc != 2)
+  {
+    shell_printf(intf, "Syntax error %s [ack|noack]\r\n", argv[0]);
+    return;
+  }
+
+  if(strcmp(argv[1], "ack") == 0)
+  {
+    ack = true;
+  }
+
+  // length
+  data[0] = 28;
+
+  // FCF: first byte
+  data[1] = ((0x01) << 0)               |   // FCF: frame type
+            ((0x00) << 3)               |   // FCF: sec enabled
+            ((0x00) << 4)               |   // FCF: frame pending
+            ((ack ? 0x01 : 0x00) << 5)  |   // FCF: ack request
+            ((0x00) << 6)                   // FCF: pan ID compression
+  ;
+
+  // FCF: second byte
+  data[2] = ((0x03) << 2)               |   // FCF: dest address mode. long
+            ((0x01) << 4)               |   // FCF: frame version. 2006
+            ((0x03) << 6)                   // FCF: source address mode. long
+  ;
+
+  // sequence
+  data[3] = 0x33;
+
+  // destination PAN ID
+  data[4] = 0x01;
+  data[5] = 0x02;
+
+  // destination address
+  data[6] = 0x01;
+  data[7] = 0x02;
+  data[8] = 0x03;
+  data[9] = 0x04;
+  data[10] = 0x05;
+  data[11] = 0x06;
+  data[12] = 0x07;
+  data[13] = 0x08;
+
+  // source PAN ID
+  data[14] = 0x01;
+  data[15] = 0x02;
+
+  // source address
+  data[16] = 0x10;
+  data[17] = 0x20;
+  data[18] = 0x30;
+  data[19] = 0x40;
+  data[20] = 0x50;
+  data[21] = 0x60;
+  data[22] = 0x70;
+  data[23] = 0x80;
+
+  // MSDU
+  data[24] = 0xaa;
+  data[25] = 0xbb;
+  data[26] = 0xcc;
+  data[27] = 0xdd;
+  data[28] = 0xee;
+
+  // CRC
+  // not necessary
+
+  shell_printf(intf, "sending long frame... %s\r\n", ack ? "ack" : "noack");
+  _intf_cb = intf;
+
+  PHY_DataReq(data);
+}
+
+static void
+shell_command_rf_send_short_frame(ShellIntf* intf, int argc, const char** argv)
+{
+  static uint8_t data[64];
+  uint8_t ack = false;
+
+  //
+  // data[0]      : frame length
+  // data[1 ... ] : actual data
+  //
+  if(argc != 2)
+  {
+    shell_printf(intf, "Syntax error %s [ack|noack]\r\n", argv[0]);
+    return;
+  }
+
+  if(strcmp(argv[1], "ack") == 0)
+  {
+    ack = true;
+  }
+
+  // length
+  data[0] = 16;
+
+  // FCF: first byte
+  data[1] = ((0x01) << 0)               |   // FCF: frame type
+            ((0x00) << 3)               |   // FCF: sec enabled
+            ((0x00) << 4)               |   // FCF: frame pending
+            ((ack ? 0x01 : 0x00) << 5)  |   // FCF: ack request
+            ((0x00) << 6)                   // FCF: pan ID compression
+  ;
+
+  // FCF: second byte
+  data[2] = ((0x02) << 2)               |   // FCF: dest address mode. long
+            ((0x01) << 4)               |   // FCF: frame version. 2006
+            ((0x02) << 6)                   // FCF: source address mode. long
+  ;
+
+  // sequence
+  data[3] = 0x33;
+
+  // destination PAN ID
+  data[4] = 0x01;
+  data[5] = 0x02;
+
+  // destination address
+  data[6] = 0x01;
+  data[7] = 0x02;
+
+  // source PAN ID
+  data[8] = 0x01;
+  data[9] = 0x02;
+
+  // source address
+  data[10] = 0x10;
+  data[11] = 0x20;
+
+  // MSDU
+  data[12] = 0xaa;
+  data[13] = 0xbb;
+  data[14] = 0xcc;
+  data[15] = 0xdd;
+  data[16] = 0xee;
+  data[17] = 0xff;
+
+  // CRC
+  // not necessary
+
+  shell_printf(intf, "sending short frame... %s\r\n", ack ? "ack" : "noack");
+  _intf_cb = intf;
+
+  PHY_DataReq(data);
+}
+
+void
+PHY_DataConf(uint8_t status)
+{
+  shell_printf(_intf_cb, "\r\n--> PHY_DataConf %d\r\n", status);
+  shell_prompt(_intf_cb);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

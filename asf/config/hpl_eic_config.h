@@ -29,7 +29,7 @@
 // <e> Interrupt 0 Settings
 // <id> eic_arch_enable_irq_setting0
 #ifndef CONF_EIC_ENABLE_IRQ_SETTING0
-#define CONF_EIC_ENABLE_IRQ_SETTING0 0
+#define CONF_EIC_ENABLE_IRQ_SETTING0 1
 #endif
 
 // <q> External Interrupt 0 Event Output Enable
@@ -63,7 +63,7 @@
 // <i> This defines input sense trigger
 // <id> eic_arch_sense0
 #ifndef CONF_EIC_SENSE0
-#define CONF_EIC_SENSE0 EIC_NMICTRL_NMISENSE_NONE_Val
+#define CONF_EIC_SENSE0 EIC_NMICTRL_NMISENSE_RISE_Val
 #endif
 // </e>
 
@@ -275,7 +275,7 @@
 // <e> Interrupt 6 Settings
 // <id> eic_arch_enable_irq_setting6
 #ifndef CONF_EIC_ENABLE_IRQ_SETTING6
-#define CONF_EIC_ENABLE_IRQ_SETTING6 1
+#define CONF_EIC_ENABLE_IRQ_SETTING6 0
 #endif
 
 // <q> External Interrupt 6 Event Output Enable
@@ -309,7 +309,7 @@
 // <i> This defines input sense trigger
 // <id> eic_arch_sense6
 #ifndef CONF_EIC_SENSE6
-#define CONF_EIC_SENSE6 EIC_NMICTRL_NMISENSE_RISE_Val
+#define CONF_EIC_SENSE6 EIC_NMICTRL_NMISENSE_NONE_Val
 #endif
 // </e>
 
@@ -683,9 +683,8 @@
 // </e>
 
 #ifndef CONFIG_EIC_EXTINT_MAP
-#define CONFIG_EIC_EXTINT_MAP {6, PIN_PA22},
+#define CONFIG_EIC_EXTINT_MAP {0, PIN_PB00},
 #endif
-
 // <<< end of configuration section >>>
 
 #endif // HPL_EIC_CONFIG_H

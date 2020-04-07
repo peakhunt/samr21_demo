@@ -231,8 +231,11 @@ void PHY_Init(void)
 	phyWriteRegister(TRX_CTRL_2_REG,
 			(1 << RX_SAFE_MODE) | (1 << OQPSK_SCRAM_EN));
 
-  ext_irq_register(PA22, __at86rf233_irq_handler);
+  ext_irq_register(RF_IRQ, __at86rf233_irq_handler);
   event_register_handler(at86rf233_irq_handler, DISPATCH_EVENT_RF_IRQ);
+  ext_irq_enable(RF_IRQ);
+  
+  phyWriteRegister(IRQ_MASK_REG, 0x08);
 }
 
 void PHY_SetRxState(bool rx)
@@ -297,7 +300,7 @@ void PHY_DataReq(uint8_t *data)
 	/* size of the buffer is sent as first byte of the data
 	 * and data starts from second byte.
 	 */
-#if 0 // FIXME hkim! Why +2 then -1? frame length can remain same!
+#if 1 // XXX hkim! Why +2 then -1? frame length can remain same!
 	data[0] += 2;
 	trx_frame_write(data, (data[0] - 1) /* length value*/);
 #else

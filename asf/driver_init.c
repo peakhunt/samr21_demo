@@ -19,19 +19,6 @@ void EXTERNAL_IRQ_0_init(void)
 {
 	_gclk_enable_channel(EIC_GCLK_ID, CONF_GCLK_EIC_SRC);
 
-	// Set pin direction to input
-	gpio_set_pin_direction(PA22, GPIO_DIRECTION_IN);
-
-	gpio_set_pin_pull_mode(PA22,
-	                       // <y> Pull configuration
-	                       // <id> pad_pull_config
-	                       // <GPIO_PULL_OFF"> Off
-	                       // <GPIO_PULL_UP"> Pull-up
-	                       // <GPIO_PULL_DOWN"> Pull-down
-	                       GPIO_PULL_OFF);
-
-	gpio_set_pin_function(PA22, PINMUX_PA22A_EIC_EXTINT6);
-
 	ext_irq_init();
 }
 
@@ -320,6 +307,11 @@ void system_init(void)
 	                      // <GPIO_PIN_FUNCTION_G"> G
 	                      // <GPIO_PIN_FUNCTION_H"> H
 	                      GPIO_PIN_FUNCTION_OFF);
+
+  // GPIO on PB00
+  gpio_set_pin_direction(RF_IRQ, GPIO_DIRECTION_IN);
+  gpio_set_pin_pull_mode(RF_IRQ, GPIO_PULL_OFF);
+  gpio_set_pin_function(RF_IRQ, PINMUX_PB00A_EIC_EXTINT0);
 
 	EXTERNAL_IRQ_0_init();
 
