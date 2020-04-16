@@ -9,6 +9,7 @@
 #include "shell.h"
 #include "phy.h"
 #include "app.h"
+#include "wpan_ping.h"
 
 static void
 app_init_f(void)
@@ -26,6 +27,7 @@ app_init_r(void)
   PHY_Init();
   blinky_init();
   shell_init();
+  wpan_ping_init();
 }
 
 void

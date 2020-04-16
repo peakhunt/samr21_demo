@@ -451,9 +451,10 @@ PHY_TaskHandler(void)
       ind.size = size - PHY_CRC_SIZE;
       ind.lqi  = phyRxBuffer[size + 1];
       ind.rssi = rssi + PHY_RSSI_BASE_VAL;
-      PHY_DataInd(&ind);
 
       phyWaitState(TRX_STATUS_RX_AACK_ON);
+
+      PHY_DataInd(&ind);
     }
     else if (PHY_STATE_TX_WAIT_END == phyState)
     {

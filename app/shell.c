@@ -57,6 +57,7 @@ const uint8_t                 _prompt[]  = "\r\nSAMR21> ";
 static char                   _print_buffer[SHELL_MAX_COLUMNS_PER_LINE + 1];
 
 static ShellIntf*             _intf_cb = NULL;
+static ShellIntf*             _intf_rx = NULL;
 
 static LIST_HEAD(_shell_intf_list);
 
@@ -183,6 +184,11 @@ shell_command_rf_set_rx_state(ShellIntf* intf, int argc, const char** argv)
   if(strcmp(argv[1], "true") == 0)
   {
     v = true;
+    _intf_rx = intf;
+  }
+  else
+  {
+    _intf_rx = NULL;
   }
 
   PHY_SetRxState(v);
@@ -448,9 +454,43 @@ shell_command_rf_send_short_frame(ShellIntf* intf, int argc, const char** argv)
 }
 
 void
-PHY_DataConf(uint8_t status)
+__PHY_DataConf(uint8_t status)
 {
+  if(_intf_cb == NULL)
+  {
+    return;
+  }
+
   shell_printf(_intf_cb, "\r\n--> PHY_DataConf %d\r\n", status);
+  shell_prompt(_intf_cb);
+}
+
+void
+__PHY_DataInd(PHY_DataInd_t *ind)
+{
+  if(_intf_rx == NULL)
+  {
+    return;
+  }
+
+  shell_printf(_intf_rx, "\r\n --> PHY_DataInd\r\n");
+  shell_printf(_intf_rx, "\r\n size: %d, lqi: %d, rssi: %d\r\n",
+      ind->size, ind->lqi, ind->rssi);
+
+  for(uint8_t i = 0; i < ind->size; )
+  {
+    uint8_t chunk_size;
+
+    chunk_size= (i + 8) <= ind->size ? 8 : (ind->size - i);
+
+    for(uint8_t j = 0; j < chunk_size; j++)
+    {
+      shell_printf(_intf_rx, " %02x", ind->data[i + j]);
+    }
+    shell_printf(_intf_rx, "\r\n");
+
+    i += chunk_size;
+  }
   shell_prompt(_intf_cb);
 }
 

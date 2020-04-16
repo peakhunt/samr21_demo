@@ -1,0 +1,19 @@
+a) setup pan ID
+
+  iwpan dev wpan0 set pan_id 0x0001
+
+b) setup short address
+  iwpan dev wpan0 set short_addr 0x0001
+
+c) setup channel
+  iwpan phy phy0 set channel 0 11
+
+e) verify
+  iwpan phy phy0 info
+  iwpan dev wpan0 info
+
+f) if up
+  ifconfig wpan0 up
+
+h) test
+  wpan-ping -a 0x0002

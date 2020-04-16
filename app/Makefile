@@ -37,7 +37,8 @@ app/mainloop_timer.o \
 app/blinky.o \
 app/shellif_usb.o \
 app/phy.o \
-app/phy_user.o
+app/phy_user.o \
+app/wpan_ping.o
 
 OBJS_AS_ARGS += \
 "app/app.o" \
@@ -49,7 +50,8 @@ OBJS_AS_ARGS += \
 "app/blinky.o" \
 "app/shellif_usb.o" \
 "app/phy.o" \
-"app/phy_user.o"
+"app/phy_user.o" \
+"app/wpan_ping.o"
 
 DIR_INCLUDES += \
 -I"../../app" \
@@ -65,6 +67,7 @@ DEPS_AS_ARGS += \
 "app/blinky.d" \
 "app/shellif_usb.d" \
 "app/phy.d" \
-"app/phy_user.d"
+"app/phy_user.d" \
+"app/wpan_ping.d"
 
 vpath %.c ../../
